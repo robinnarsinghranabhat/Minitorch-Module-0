@@ -17,17 +17,25 @@ class Module:
 
     def modules(self):
         "Return the direct child modules of this module."
+        # Why not just self._modules.values(), both return same thing
         return self.__dict__["_modules"].values()
 
     def train(self):
         "Set the mode of this module and all descendent modules to `train`."
-        # TODO: Implement for Task 0.4.
-        raise NotImplementedError('Need to implement for Task 0.4')
+
+        # Note : Assignment never copies in python
+        # This out is reference to original. 
+        # So, each element in out, is original Modules present inside : self._modules.values
+        # And these elements are mutable objects.   
+        self.training = True
+        for module in self.modules(): 
+            module.training = True
 
     def eval(self):
         "Set the mode of this module and all descendent modules to `eval`."
-        # TODO: Implement for Task 0.4.
-        raise NotImplementedError('Need to implement for Task 0.4')
+        self.training = False
+        for module in self.modules():
+            module.training = False
 
     def named_parameters(self):
         """
@@ -37,13 +45,29 @@ class Module:
         Returns:
             list of pairs: Contains the name and :class:`Parameter` of each ancestor parameter.
         """
-        # TODO: Implement for Task 0.4.
-        raise NotImplementedError('Need to implement for Task 0.4')
+        named_param_dict = self._parameters.copy()
+
+        def recursor( module_obj , key_name=None):
+            '''
+            Recursively Populate the named_param_dict
+            '''
+            for sub_module_name, sub_module in module_obj._modules.items():
+                named_param_key = f"{key_name}.{sub_module_name}" if key_name else f"{sub_module_name}"
+
+                for param_name, param_val in sub_module._parameters.items():
+                    named_param_dict[ f"{named_param_key}.{param_name}" ] = param_val
+
+                recursor( sub_module, named_param_key  )
+        
+        recursor(self)
+
+        return named_param_dict
+            
 
     def parameters(self):
         "Enumerate over all the parameters of this module and its descendents."
-        # TODO: Implement for Task 0.4.
-        raise NotImplementedError('Need to implement for Task 0.4')
+        return self.named_parameters()
+        
 
     def add_parameter(self, k, v):
         """
